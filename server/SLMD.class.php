@@ -66,18 +66,24 @@ class SLMD
 
     public function getWritingUrl($writingTitle = '')
     {
-        $slug = str_replace(' ', '-', strtolower($writingTitle));
-        $slug = preg_replace('/[^A-Za-z0-9\-]/', '', $slug);
+        $slug = $this->getWritingSlug($writingTitle);
 
         return $this->settings['writings_url'] . $slug . '/';
     }
 
     public function getWritingPictureUrl($writingTitle = '')
     {
-        $pictureName = str_replace(' ', '-', strtolower($writingTitle));
-        $pictureName = preg_replace('/[^A-Za-z0-9\-]/', '', $pictureName);
+        $pictureName = $this->getWritingSlug($writingTitle);
 
         return $this->settings['pictures_url'] . $pictureName . '.png';
+    }
+
+    public static function getWritingSlug($writingTitle = '')
+    {
+        $slug = str_replace(' ', '-', strtolower($writingTitle));
+        $slug = preg_replace('/[^A-Za-z0-9\-\$\_\.\+\!\*\'\(\)\,]/', '', $slug);
+
+        return $slug;
     }
 
     public function updateWritingStatus()
