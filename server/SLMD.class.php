@@ -9,6 +9,7 @@ class SLMD
     public function __construct()
     {
         $this->mysqli = new mysqli('localhost', 'post.slmd.info', 'post.slmd.info', 'post.sleeplessmind.info');
+        $this->mysqli->set_charset('utf8');
 
         $this->loadSettings();
     }
