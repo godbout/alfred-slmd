@@ -40,15 +40,22 @@ class SLMD
 
     public function getFacebookData()
     {
-        $result = $this->mysqli->query('SELECT * FROM writings WHERE is_published = 0');
+        $result = $this->mysqli->query('SELECT * FROM writings WHERE is_new = 1 ORDER BY id ASC');
 
         if ($result->num_rows === 0) {
-            $this->resetWritingsStatus();
             $result = $this->mysqli->query('SELECT * FROM writings WHERE is_published = 0');
-        }
 
-        $rows = $result->fetch_all(MYSQLI_ASSOC);
-        $data = $rows[array_rand($rows)];
+            if ($result->num_rows === 0) {
+                $this->resetWritingsStatus();
+                $result = $this->mysqli->query('SELECT * FROM writings WHERE is_published = 0');
+            }
+
+            $rows = $result->fetch_all(MYSQLI_ASSOC);
+            $data = $rows[array_rand($rows)];
+        } else {
+            $rows = $result->fetch_all(MYSQLI_ASSOC);
+            $data = $rows[0];
+        }
 
         $this->writingId = $data['id'];
 
@@ -60,6 +67,8 @@ class SLMD
             'caption' => $data['caption'],
             'description' => $data['description'],
         ];
+
+        $result->free();
 
         return $facebookData;
     }
@@ -88,7 +97,7 @@ class SLMD
 
     public function updateWritingStatus()
     {
-        $this->mysqli->query('UPDATE writings SET is_published = 1 WHERE id = ' . $this->writingId);
+        $this->mysqli->query('UPDATE writings SET is_published = 1, is_new = 0 WHERE id = ' . $this->writingId);
     }
 
     public function resetWritingsStatus()
