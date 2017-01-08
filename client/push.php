@@ -18,6 +18,7 @@ if (file_exists($configFile) === false) {
 
 switch ($query) {
     case 'facebook':
+    case 'twitter':
 
         $data = [
             'token' => $config['token'],

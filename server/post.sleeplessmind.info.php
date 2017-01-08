@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../vendor/autoload.php';
 require_once 'SLMD.class.php';
 
 $postData = json_decode(file_get_contents('php://input'), true);
@@ -19,24 +20,11 @@ if ($postData['token'] !== $slmd->getToken()) {
 } else {
     switch ($postData['service']) {
         case 'facebook':
-            require_once __DIR__ . '/../vendor/autoload.php';
+            $response['message'] = $slmd->postWritingToFacebook();
+            break;
 
-            $facebookSettings = $slmd->getFacebookSettings();
-            $fb = new Facebook\Facebook($facebookSettings);
-
-            $facebookData = $slmd->getFacebookData();
-
-            try {
-                $facebookResponse = $fb->post('/me/feed', $facebookData);
-                $slmd->updateWritingStatus();
-                $response['message'] = 'Successfully posted on Facebook!';
-            } catch (Facebook\Exceptions\FacebookResponseException $e) {
-                $response['message'] = 'Graph returned an error: ' . $e->getMessage();
-
-            } catch (Facebook\Exceptions\FacebookSDKException $e) {
-                $response['message'] = 'Facebook SDK returned an error: ' . $e->getMessage();
-            }
-
+        case 'twitter':
+            $response['message'] = $slmd->postWritingToTwitter();
             break;
 
         default:

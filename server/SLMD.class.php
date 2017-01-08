@@ -1,5 +1,26 @@
 <?php
 
+/**
+ * TODO: 
+ * move all the facebook and twitter crap into SLMD
+ * make functions to post on each of the social networks and call from there, all the rest is handled by SLMD class
+ * rename methods getDataForFacebook
+ */
+
+// use Abraham\TwitterOAuth\TwitterOAuth;
+// // use Facebook\Facebook;
+
+// $tw = new TwitterOAuth('KfPs0MpXnGjYHqdcH6gWtsAmf', 'HvxTa6FpPT5dTIdKF4QR0XViGIX2E9eK225QzSoakhLhs8m4Uf', '4882789453-qFGwYt34jUIVVT8TtCvpFZ75BSXU2tOhMCFLlu2', 'Gu4rCY7jy4FKLM2nNaFuVUuxdv3utX6kX7oUvRBu4K4eo');
+// // $content = $tw->get('account/verify_credentials');
+// $content = $tw->get("statuses/home_timeline", ["count" => 25, "exclude_replies" => true]);
+// var_dump($content);
+// die();
+
+
+use Facebook\Exceptions\FacebookResponseException;
+use Facebook\Exceptions\FacebookSDKException;
+use Facebook\Facebook;
+
 class SLMD
 {
     protected $msqli = null;
@@ -31,15 +52,32 @@ class SLMD
 
     public function getFacebookSettings()
     {
-        $result = $this->mysqli->query('SELECT value FROM settings WHERE name = \'facebook\'');
-        $row = $result->fetch_assoc();
-        $facebookSettings = json_decode($row['value'], true);
-        $result->free();
-
-        return $facebookSettings;
+        return json_decode($this->settings['facebook'], true);
     }
 
-    public function getFacebookData()
+    public function postWritingToFacebook()
+    {
+        $fbSettings = $this->getFacebookSettings();
+
+        $fb = new Facebook($fbSettings);
+
+        $data = $this->getWritingDataForFacebook();
+
+        try {
+            $facebookResponse = $fb->post('/me/feed', $data);
+            $this->updateWritingStatus();
+            $response = 'Successfully posted on Facebook!';
+        } catch (FacebookResponseException $e) {
+            $response = 'Graph returned an error: ' . $e->getMessage();
+
+        } catch (FacebookSDKException $e) {
+            $response = 'Facebook SDK returned an error: ' . $e->getMessage();
+        }
+
+        return $response;
+    }
+
+    public function getWritingDataForFacebook()
     {
         $result = $this->mysqli->query('SELECT * FROM writings WHERE is_new = 1 ORDER BY id ASC');
 
@@ -72,6 +110,13 @@ class SLMD
         $result->free();
 
         return $facebookData;
+    }
+
+    public function postWritingToTwitter()
+    {
+        $response = 'Not implemented yet.';
+
+        return $response;
     }
 
     public function getWritingUrl($writingTitle = '')
