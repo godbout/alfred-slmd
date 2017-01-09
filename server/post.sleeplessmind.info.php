@@ -10,10 +10,13 @@ $response = [];
 /**
  * Only for testing
  */
-// $postData = [
-//     'token' => $slmd->getToken(),
-//     'service' => 'facebook',
-// ];
+$query = trim($argv[1]);
+if (isset($query) === true && $query === 'test') {
+    $postData = [
+        'token' => $slmd->getToken(),
+        'service' => $argv[2],
+    ];
+}
 
 if ($postData['token'] !== $slmd->getToken()) {
     $response['message'] = 'token invalid';
