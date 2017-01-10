@@ -1,22 +1,6 @@
 <?php
 
-/**
- * TODO: 
- * move all the facebook and twitter crap into SLMD
- * make functions to post on each of the social networks and call from there, all the rest is handled by SLMD class
- * rename methods getDataForFacebook
- */
-
-// use Abraham\TwitterOAuth\TwitterOAuth;
-// // use Facebook\Facebook;
-
-// $tw = new TwitterOAuth('KfPs0MpXnGjYHqdcH6gWtsAmf', 'HvxTa6FpPT5dTIdKF4QR0XViGIX2E9eK225QzSoakhLhs8m4Uf', '4882789453-qFGwYt34jUIVVT8TtCvpFZ75BSXU2tOhMCFLlu2', 'Gu4rCY7jy4FKLM2nNaFuVUuxdv3utX6kX7oUvRBu4K4eo');
-// // $content = $tw->get('account/verify_credentials');
-// $content = $tw->get("statuses/home_timeline", ["count" => 25, "exclude_replies" => true]);
-// var_dump($content);
-// die();
-
-
+use Abraham\TwitterOAuth\TwitterOAuth;
 use Facebook\Exceptions\FacebookResponseException;
 use Facebook\Exceptions\FacebookSDKException;
 use Facebook\Facebook;
@@ -24,7 +8,7 @@ use Facebook\Facebook;
 class SLMD
 {
     protected $msqli = null;
-    protected $writingId = 0;
+    protected $writingData = null;
     protected $settings = null;
 
     public function __construct()
@@ -35,102 +19,52 @@ class SLMD
         $this->loadSettings();
     }
 
-    public function loadSettings()
-    {
-        $result = $this->mysqli->query('SELECT name, value FROM settings');
-        $settings = $result->fetch_all(MYSQLI_ASSOC);
-        foreach ($settings as $key => $setting) {
-            $this->settings[$setting['name']] = $setting['value'];
-        }
-        $result->free();
-    }
-
     public function getToken()
     {
         return $this->settings['token'];
     }
 
-    public function getFacebookSettings()
-    {
-        return json_decode($this->settings['facebook'], true);
-    }
-
     public function postWritingToFacebook()
     {
         $fbSettings = $this->getFacebookSettings();
-
         $fb = new Facebook($fbSettings);
-
         $data = $this->getWritingDataForFacebook();
 
         try {
             $facebookResponse = $fb->post('/me/feed', $data);
             $this->updateWritingStatus();
-            $response = 'Successfully posted on Facebook!';
+            $response = 'Facebook: posted!';
         } catch (FacebookResponseException $e) {
-            $response = 'Graph returned an error: ' . $e->getMessage();
+            $response = 'Facebook Graph error: ' . $e->getMessage();
 
         } catch (FacebookSDKException $e) {
-            $response = 'Facebook SDK returned an error: ' . $e->getMessage();
+            $response = 'Facebook SDK error: ' . $e->getMessage();
         }
 
         return $response;
-    }
-
-    public function getWritingDataForFacebook()
-    {
-        $result = $this->mysqli->query('SELECT * FROM writings WHERE is_new = 1 ORDER BY id ASC');
-
-        if ($result->num_rows === 0) {
-            $result = $this->mysqli->query('SELECT * FROM writings WHERE is_published = 0');
-
-            if ($result->num_rows === 0) {
-                $this->resetWritingsStatus();
-                $result = $this->mysqli->query('SELECT * FROM writings WHERE is_published = 0');
-            }
-
-            $rows = $result->fetch_all(MYSQLI_ASSOC);
-            $data = $rows[array_rand($rows)];
-        } else {
-            $rows = $result->fetch_all(MYSQLI_ASSOC);
-            $data = $rows[0];
-        }
-
-        $this->writingId = $data['id'];
-
-        $facebookData = [
-            'message' => $data['message'],
-            'link' => $this->getWritingUrl($data['title']),
-            'picture' => $this->getWritingPictureUrl($data['title']),
-            'name' => $data['title'],
-            'caption' => $data['caption'],
-            'description' => $data['description'],
-        ];
-
-        $result->free();
-
-        return $facebookData;
     }
 
     public function postWritingToTwitter()
     {
-        $response = 'Not implemented yet.';
+        $twSettings = $this->getTwitterSettings();
+        $tw = new TwitterOAuth($twSettings['consumer_key'], $twSettings['consumer_secret'], $twSettings['access_token'], $twSettings['access_token_secret']);
+        $data = $this->getWritingDataForTwitter($tw);
+
+        $tw->post('statuses/update', $data);
+        if ($tw->getLastHttpCode() == 200) {
+            $this->updateWritingStatus();
+            $response = 'Twitter: posted!';
+        } else {
+            $body = $tw->getLastBody();
+            $response = 'Twitter error: (' . $body->errors[0]->code . ') ' . $body->errors[0]->message;
+        }
 
         return $response;
     }
 
-    public function getWritingUrl($writingTitle = '')
+    public function clean()
     {
-        $slug = $this->getWritingSlug($writingTitle);
-
-        return $this->settings['writings_url'] . $slug . '/';
-    }
-
-    public function getWritingPictureUrl($writingTitle = '')
-    {
-        $pictureName = $this->getWritingSlug($writingTitle);
-
-        return $this->settings['pictures_url'] . $pictureName . '.png';
+        $this->mysqli->close();
     }
 
     public static function getWritingSlug($writingTitle = '')
@@ -141,18 +75,107 @@ class SLMD
         return $slug;
     }
 
-    public function updateWritingStatus()
+    private function getCurrentWritingData()
     {
-        $this->mysqli->query('UPDATE writings SET is_published = 1, is_new = 0 WHERE id = ' . $this->writingId);
+        if ($this->writingData === null) {
+            $result = $this->mysqli->query('SELECT * FROM writings WHERE is_new = 1 ORDER BY id ASC');
+
+            if ($result->num_rows === 0) {
+                $result = $this->mysqli->query('SELECT * FROM writings WHERE is_published = 0');
+
+                if ($result->num_rows === 0) {
+                    $this->resetWritingsStatus();
+                    $result = $this->mysqli->query('SELECT * FROM writings WHERE is_published = 0');
+                }
+
+                $rows = $result->fetch_all(MYSQLI_ASSOC);
+                $data = $rows[array_rand($rows)];
+            } else {
+                $rows = $result->fetch_all(MYSQLI_ASSOC);
+                $data = $rows[0];
+            }
+
+            $this->writingData = $data;
+
+            $result->free();
+        }
+
+        return $this->writingData;
     }
 
-    public function resetWritingsStatus()
+    private function loadSettings()
+    {
+        $result = $this->mysqli->query('SELECT name, value FROM settings');
+        $settings = $result->fetch_all(MYSQLI_ASSOC);
+        foreach ($settings as $key => $setting) {
+            $this->settings[$setting['name']] = $setting['value'];
+        }
+        $result->free();
+    }
+
+    private function getFacebookSettings()
+    {
+        return json_decode($this->settings['facebook'], true);
+    }
+
+    private function getWritingDataForFacebook()
+    {
+        $data = $this->getCurrentWritingData();
+
+        $facebookData = [
+            'message' => $data['message'],
+            'link' => $this->getWritingUrl($data['title']),
+            'picture' => $this->getWritingPictureUrl($data['title']),
+            'name' => $data['title'],
+            'caption' => $data['caption'],
+            'description' => $data['description'],
+        ];
+
+        return $facebookData;
+    }
+
+    private function getTwitterSettings()
+    {
+        return json_decode($this->settings['twitter'], true);
+    }
+
+    private function getWritingDataForTwitter(TwitterOAuth $tw)
+    {
+        $data = $this->getCurrentWritingData();
+        $pictureUrl = $this->getWritingPictureUrl($data['title']);
+        $media = $tw->upload('media/upload', ['media' => $pictureUrl]);
+
+        $tweet = strtr($data['twitter_message'], ['{url}' => $this->getWritingUrl($data['title'])]);
+
+        $twData = [
+            'status' => $tweet,
+            'media_ids' => $media->media_id_string,
+        ];
+
+        return $twData;
+    }
+
+    private function getWritingUrl($writingTitle = '')
+    {
+        $slug = $this->getWritingSlug($writingTitle);
+
+        return $this->settings['writings_url'] . $slug . '/';
+    }
+
+    private function getWritingPictureUrl($writingTitle = '')
+    {
+        $pictureName = $this->getWritingSlug($writingTitle);
+
+        return $this->settings['pictures_url'] . $pictureName . '.png';
+    }
+
+    private function updateWritingStatus()
+    {
+        $this->mysqli->query('UPDATE writings SET is_published = 1, is_new = 0 WHERE id = ' . $this->writingData['id']);
+    }
+
+    private function resetWritingsStatus()
     {
         $this->mysqli->query('UPDATE writings SET is_published = 0');
-    }
-
-    public function clean()
-    {
-        $this->mysqli->close();
     }
 }
