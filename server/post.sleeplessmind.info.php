@@ -30,6 +30,11 @@ if ($postData['token'] !== $slmd->getToken()) {
             $response['message'] = $slmd->postWritingToTwitter();
             break;
 
+        case 'all':
+            $response['message'] = $slmd->postWritingToFacebook();
+            $response['message'] .= "\r\n" . $slmd->postWritingToTwitter();
+            break;
+
         default:
             $response['message'] = 'service not recognized';
             break;
