@@ -4,6 +4,9 @@ use Abraham\TwitterOAuth\TwitterOAuth;
 use Facebook\Exceptions\FacebookResponseException;
 use Facebook\Exceptions\FacebookSDKException;
 use Facebook\Facebook;
+use Ipalaus\Buffer\Client as BufferClient;
+use Ipalaus\Buffer\TokenAuthorization as BufferTokenAuthorization;
+use Ipalaus\Buffer\Update as BufferUpdate;
 
 class SLMD
 {
@@ -57,6 +60,37 @@ class SLMD
         } else {
             $body = $tw->getLastBody();
             $response = 'Twitter error: (' . $body->errors[0]->code . ') ' . $body->errors[0]->message;
+        }
+
+        return $response;
+    }
+
+    public function postWritingToGooglePlus()
+    {
+        $bufSettings = $this->getBufferSettings();
+        $bufToken = new BufferTokenAuthorization($bufSettings['access_token']);
+        $buf = new BufferClient($bufToken);
+        $data = $this->getWritingDataForGooglePlus();
+
+        $bufUpdate = new BufferUpdate;
+
+        $bufUpdate->text = $data['text'];
+        $bufUpdate->addMedia('link', $data['link']);
+        $bufUpdate->addMedia('description', $data['description']);
+        $bufUpdate->addMedia('picture', $data['picture']);
+        // $bufUpdate->addMedia('thumbnail', $data['picture']);
+
+        $bufUpdate->shorten = 'false';
+        $bufUpdate->now = 'false';
+
+        $bufUpdate->addProfile($bufSettings['googleplus_id']);
+
+        $bufResponse = $buf->createUpdate($bufUpdate);
+
+        if ($bufResponse['success'] === true) {
+            $response = 'Google+: posted!';
+        } else {
+            $response = 'Google+ (Buffer) error: ' . $bufResponse['message'];
         }
 
         return $response;
@@ -153,6 +187,26 @@ class SLMD
         ];
 
         return $twData;
+    }
+
+    private function getBufferSettings()
+    {
+        return json_decode($this->settings['buffer'], true);
+    }
+
+    private function getWritingDataForGooglePlus()
+    {
+        $data = $this->getCurrentWritingData();
+
+        $gpData = [
+            'text' => $data['message'],
+            'link' => $this->getWritingUrl($data['title']),
+            'picture' => $this->getWritingPictureUrl($data['title']),
+            'thumbnail' => $this->getWritingPictureUrl($data['title']),
+            'description' => $data['description'],
+        ];
+
+        return $gpData;
     }
 
     private function getWritingUrl($writingTitle = '')

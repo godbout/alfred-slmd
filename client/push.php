@@ -19,6 +19,7 @@ if (file_exists($configFile) === false) {
 switch ($query) {
     case 'facebook':
     case 'twitter':
+    case 'googleplus':
     case 'all':
 
         $data = [

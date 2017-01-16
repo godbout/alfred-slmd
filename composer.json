@@ -1,6 +1,7 @@
 {
     "require": {
         "abraham/twitteroauth": "^0.7.2",
-        "facebook/graph-sdk": "^5.4"
+        "facebook/graph-sdk": "^5.4",
+        "ipalaus/buffer-php-sdk": "^1.1"
     }
 }

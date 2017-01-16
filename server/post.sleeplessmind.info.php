@@ -30,6 +30,10 @@ if ($postData['token'] !== $slmd->getToken()) {
             $response['message'] = $slmd->postWritingToTwitter();
             break;
 
+        case 'googleplus':
+            $response['message'] = $slmd->postWritingToGooglePlus();
+            break;
+
         case 'all':
             $response['message'] = $slmd->postWritingToFacebook();
             $response['message'] .= "\r\n" . $slmd->postWritingToTwitter();
