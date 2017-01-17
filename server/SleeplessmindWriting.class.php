@@ -122,6 +122,7 @@ class SleeplessmindWriting
         $response = $this->postToFacebook();
         $response .= "\r\n" . $this->postToTwitter();
         $response .= "\r\n" . $this->postToGooglePlus();
+        $response .= "\r\n" . $this->postToInstagram();
 
         return $response;
     }
