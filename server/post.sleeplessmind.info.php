@@ -38,6 +38,10 @@ if ($auth->authenticate($postData['token']) === false) {
             $response['message'] = $writing->postToGooglePlus();
             break;
 
+        case 'instagram':
+            $response['message'] = $writing->postToInstagram();
+            break;
+
         case 'all':
             $response['message'] = $writing->postToAllPlatforms();
 

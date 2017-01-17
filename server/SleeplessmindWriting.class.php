@@ -90,6 +90,33 @@ class SleeplessmindWriting
         return $response;
     }
 
+    public function postToInstagram()
+    {
+        $bufSettings = $this->getBufferSettings();
+        $bufToken = new BufferTokenAuthorization($bufSettings['access_token']);
+        $buf = new BufferClient($bufToken);
+        $data = $this->getDataForInstagram();
+
+        $bufUpdate = new BufferUpdate;
+
+        $bufUpdate->text = $data['text'];
+        $bufUpdate->addMedia('photo', $data['photo']);
+        $bufUpdate->shorten = $data['shorten'];
+        $bufUpdate->now = $data['now'];
+
+        $bufUpdate->addProfile($bufSettings['instagram_id']);
+
+        $bufResponse = $buf->createUpdate($bufUpdate);
+
+        if ($bufResponse['success'] === true) {
+            $response = 'Instagram: posted!';
+        } else {
+            $response = 'Instagram (Buffer) error: ' . $bufResponse['message'];
+        }
+
+        return $response;
+    }
+
     public function postToAllPlatforms()
     {
         $response = $this->postToFacebook();
@@ -204,6 +231,22 @@ class SleeplessmindWriting
         $data = $this->getData();
 
         $message = $data['message'] . "\r\n\r\n" . $this->getUrl($data['title']) . "\r\n\r\n" . '"' . $data['description'] . '"' . (empty($data['hashtags']) ? '' : ("\r\n\r\n" . $data['hashtags']));
+
+        $gpData = [
+            'text' => $message,
+            'photo' => $this->getPictureUrl($data['title']),
+            'shorten' => 'false',
+            'now' => 'true',
+        ];
+
+        return $gpData;
+    }
+
+    private function getDataForInstagram()
+    {
+        $data = $this->getData();
+
+        $message = $data['message'] . "\r\n.\r\n" . $this->getUrl($data['title']) . "\r\n.\r\n" . '"' . $data['description'] . '"' . (empty($data['hashtags']) ? '' : ("\r\n.\r\n" . $data['hashtags']));
 
         $gpData = [
             'text' => $message,
