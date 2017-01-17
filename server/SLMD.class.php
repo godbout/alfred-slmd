@@ -74,12 +74,13 @@ class SLMD
 
         $bufUpdate = new BufferUpdate;
 
-        $bufUpdate->text = $data['text'];
-        $bufUpdate->addMedia('link', $data['link']);
-        $bufUpdate->addMedia('description', $data['description']);
-        $bufUpdate->addMedia('picture', $data['picture']);
+        $bufUpdate->text = $data['text'] . "\r\n\r\n" . $data['link'] . "\r\n\r\n" . $data['description'];
+        $bufUpdate->addMedia('photo', $data['picture']);
+        // $bufUpdate->addMedia('link', $data['link']);
+        // $bufUpdate->addMedia('description', $data['description']);
         // $bufUpdate->addMedia('thumbnail', $data['picture']);
 
+        // $bufUpdate->attachment = 'false';
         $bufUpdate->shorten = 'false';
         $bufUpdate->now = 'false';
 
@@ -179,7 +180,7 @@ class SLMD
         $pictureUrl = $this->getWritingPictureUrl($data['title']);
         $media = $tw->upload('media/upload', ['media' => $pictureUrl]);
 
-        $tweet = strtr($data['twitter_message'], ['{url}' => $this->getWritingUrl($data['title'])]);
+        $tweet = strtr($data['tweet'], ['{url}' => $this->getWritingUrl($data['title'])]);
 
         $twData = [
             'status' => $tweet,
