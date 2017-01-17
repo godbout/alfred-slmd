@@ -157,8 +157,10 @@ class SLMD
     {
         $data = $this->getCurrentWritingData();
 
+        $message = $data['message'] . (empty($data['hashtags']) ? '' : ("\r\n\r\n" . $data['hashtags']));
+
         $facebookData = [
-            'message' => $data['message'],
+            'message' => $message,
             'link' => $this->getWritingUrl($data['title']),
             'picture' => $this->getWritingPictureUrl($data['title']),
             'name' => $data['title'],
