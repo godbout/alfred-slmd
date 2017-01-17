@@ -74,15 +74,10 @@ class SLMD
 
         $bufUpdate = new BufferUpdate;
 
-        $bufUpdate->text = $data['text'] . "\r\n\r\n" . $data['link'] . "\r\n\r\n" . $data['description'];
-        $bufUpdate->addMedia('photo', $data['picture']);
-        // $bufUpdate->addMedia('link', $data['link']);
-        // $bufUpdate->addMedia('description', $data['description']);
-        // $bufUpdate->addMedia('thumbnail', $data['picture']);
-
-        // $bufUpdate->attachment = 'false';
-        $bufUpdate->shorten = 'false';
-        $bufUpdate->now = 'false';
+        $bufUpdate->text = $data['text'];
+        $bufUpdate->addMedia('photo', $data['photo']);
+        $bufUpdate->shorten = $data['shorten'];
+        $bufUpdate->now = $data['now'];
 
         $bufUpdate->addProfile($bufSettings['googleplus_id']);
 
@@ -201,12 +196,13 @@ class SLMD
     {
         $data = $this->getCurrentWritingData();
 
+        $message = $data['message'] . "\r\n\r\n" . $this->getWritingUrl($data['title']) . "\r\n\r\n" . '"' . $data['description'] . '"' . (empty($data['hashtags']) ? '' : ("\r\n\r\n" . $data['hashtags']));
+
         $gpData = [
-            'text' => $data['message'],
-            'link' => $this->getWritingUrl($data['title']),
-            'picture' => $this->getWritingPictureUrl($data['title']),
-            'thumbnail' => $this->getWritingPictureUrl($data['title']),
-            'description' => $data['description'],
+            'text' => $message,
+            'photo' => $this->getWritingPictureUrl($data['title']),
+            'shorten' => 'false',
+            'now' => 'true',
         ];
 
         return $gpData;
