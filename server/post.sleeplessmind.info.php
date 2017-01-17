@@ -1,10 +1,14 @@
 <?php
 
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once 'SLMD.class.php';
+require_once 'SleeplessmindAuth.class.php';
+require_once 'SleeplessmindWriting.class.php';
 
 $postData = json_decode(file_get_contents('php://input'), true);
-$slmd = new SLMD();
+
+$auth = new SleeplessmindAuth();
+$writing = new SleeplessmindWriting();
+
 $response = [];
 
 /**
@@ -13,30 +17,33 @@ $response = [];
 $query = trim($argv[1]);
 if (isset($query) === true && $query === 'test') {
     $postData = [
-        'token' => $slmd->getToken(),
+        'token' => '',
         'service' => $argv[2],
     ];
 }
 
-if ($postData['token'] !== $slmd->getToken()) {
+if ($auth->authenticate($postData['token']) === false) {
     $response['message'] = 'token invalid';
 } else {
     switch ($postData['service']) {
         case 'facebook':
-            $response['message'] = $slmd->postWritingToFacebook();
+            $response['message'] = $writing->postToFacebook();
             break;
 
         case 'twitter':
-            $response['message'] = $slmd->postWritingToTwitter();
+            $response['message'] = $writing->postToTwitter();
             break;
 
         case 'googleplus':
-            $response['message'] = $slmd->postWritingToGooglePlus();
+            $response['message'] = $writing->postToGooglePlus();
             break;
 
         case 'all':
-            $response['message'] = $slmd->postWritingToFacebook();
-            $response['message'] .= "\r\n" . $slmd->postWritingToTwitter();
+            $response['message'] = $writing->postToAllPlatforms();
+
+            if (substr_count($response['message'], 'posted!') >= 3) {
+                $writing->updateStatus();
+            }
             break;
 
         default:
@@ -44,8 +51,6 @@ if ($postData['token'] !== $slmd->getToken()) {
             break;
     }
 }
-
-$slmd->clean();
 
 header('Content-Type: application/json');
 echo json_encode($response);

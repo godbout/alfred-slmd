@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/../server/SLMD.class.php';
+require_once __DIR__ . '/../server/SleeplessmindWriting.class.php';
 
 $query = trim($argv[1]);
 
-echo SLMD::getWritingSlug($query);
+echo SleeplessmindWriting::getSlug($query);

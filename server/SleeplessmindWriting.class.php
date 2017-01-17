@@ -8,10 +8,10 @@ use Ipalaus\Buffer\Client as BufferClient;
 use Ipalaus\Buffer\TokenAuthorization as BufferTokenAuthorization;
 use Ipalaus\Buffer\Update as BufferUpdate;
 
-class SLMD
+class SleeplessmindWriting
 {
     protected $msqli = null;
-    protected $writingData = null;
+    protected $data = null;
     protected $settings = null;
 
     public function __construct()
@@ -22,20 +22,19 @@ class SLMD
         $this->loadSettings();
     }
 
-    public function getToken()
+    public function __destruct()
     {
-        return $this->settings['token'];
+        $this->mysqli->close();
     }
 
-    public function postWritingToFacebook()
+    public function postToFacebook()
     {
         $fbSettings = $this->getFacebookSettings();
         $fb = new Facebook($fbSettings);
-        $data = $this->getWritingDataForFacebook();
+        $data = $this->getDataForFacebook();
 
         try {
             $facebookResponse = $fb->post('/me/feed', $data);
-            $this->updateWritingStatus();
             $response = 'Facebook: posted!';
         } catch (FacebookResponseException $e) {
             $response = 'Facebook Graph error: ' . $e->getMessage();
@@ -47,15 +46,14 @@ class SLMD
         return $response;
     }
 
-    public function postWritingToTwitter()
+    public function posttoTwitter()
     {
         $twSettings = $this->getTwitterSettings();
         $tw = new TwitterOAuth($twSettings['consumer_key'], $twSettings['consumer_secret'], $twSettings['access_token'], $twSettings['access_token_secret']);
-        $data = $this->getWritingDataForTwitter($tw);
+        $data = $this->getDataForTwitter($tw);
 
         $tw->post('statuses/update', $data);
         if ($tw->getLastHttpCode() == 200) {
-            $this->updateWritingStatus();
             $response = 'Twitter: posted!';
         } else {
             $body = $tw->getLastBody();
@@ -65,12 +63,12 @@ class SLMD
         return $response;
     }
 
-    public function postWritingToGooglePlus()
+    public function postToGooglePlus()
     {
         $bufSettings = $this->getBufferSettings();
         $bufToken = new BufferTokenAuthorization($bufSettings['access_token']);
         $buf = new BufferClient($bufToken);
-        $data = $this->getWritingDataForGooglePlus();
+        $data = $this->getDataForGooglePlus();
 
         $bufUpdate = new BufferUpdate;
 
@@ -92,22 +90,31 @@ class SLMD
         return $response;
     }
 
-    public function clean()
+    public function postToAllPlatforms()
     {
-        $this->mysqli->close();
+        $response = $this->postToFacebook();
+        $response .= "\r\n" . $this->postToTwitter();
+        $response .= "\r\n" . $this->postToGooglePlus();
+
+        return $response;
     }
 
-    public static function getWritingSlug($writingTitle = '')
+    public static function getSlug($title = '')
     {
-        $slug = str_replace(' ', '-', strtolower($writingTitle));
+        $slug = str_replace(' ', '-', strtolower($title));
         $slug = preg_replace('/[^A-Za-z0-9\-\$\_\.\+\!\*\'\(\)\,]/', '', $slug);
 
         return $slug;
     }
 
-    private function getCurrentWritingData()
+    public function updateStatus()
     {
-        if ($this->writingData === null) {
+        $this->mysqli->query('UPDATE writings SET is_published = 1, is_new = 0 WHERE id = ' . $this->data['id']);
+    }
+
+    private function getData()
+    {
+        if ($this->data === null) {
             $result = $this->mysqli->query('SELECT * FROM writings WHERE is_new = 1 ORDER BY id ASC');
 
             if ($result->num_rows === 0) {
@@ -125,12 +132,12 @@ class SLMD
                 $data = $rows[0];
             }
 
-            $this->writingData = $data;
+            $this->data = $data;
 
             $result->free();
         }
 
-        return $this->writingData;
+        return $this->data;
     }
 
     private function loadSettings()
@@ -148,16 +155,16 @@ class SLMD
         return json_decode($this->settings['facebook'], true);
     }
 
-    private function getWritingDataForFacebook()
+    private function getDataForFacebook()
     {
-        $data = $this->getCurrentWritingData();
+        $data = $this->getData();
 
         $message = $data['message'] . (empty($data['hashtags']) ? '' : ("\r\n\r\n" . $data['hashtags']));
 
         $facebookData = [
             'message' => $message,
-            'link' => $this->getWritingUrl($data['title']),
-            'picture' => $this->getWritingPictureUrl($data['title']),
+            'link' => $this->getUrl($data['title']),
+            'picture' => $this->getPictureUrl($data['title']),
             'name' => $data['title'],
             'caption' => $data['caption'],
             'description' => $data['description'],
@@ -171,13 +178,13 @@ class SLMD
         return json_decode($this->settings['twitter'], true);
     }
 
-    private function getWritingDataForTwitter(TwitterOAuth $tw)
+    private function getDataForTwitter(TwitterOAuth $tw)
     {
-        $data = $this->getCurrentWritingData();
-        $pictureUrl = $this->getWritingPictureUrl($data['title']);
+        $data = $this->getData();
+        $pictureUrl = $this->getPictureUrl($data['title']);
         $media = $tw->upload('media/upload', ['media' => $pictureUrl]);
 
-        $tweet = strtr($data['tweet'], ['{url}' => $this->getWritingUrl($data['title'])]);
+        $tweet = strtr($data['tweet'], ['{url}' => $this->getUrl($data['title'])]);
 
         $twData = [
             'status' => $tweet,
@@ -192,15 +199,15 @@ class SLMD
         return json_decode($this->settings['buffer'], true);
     }
 
-    private function getWritingDataForGooglePlus()
+    private function getDataForGooglePlus()
     {
-        $data = $this->getCurrentWritingData();
+        $data = $this->getData();
 
-        $message = $data['message'] . "\r\n\r\n" . $this->getWritingUrl($data['title']) . "\r\n\r\n" . '"' . $data['description'] . '"' . (empty($data['hashtags']) ? '' : ("\r\n\r\n" . $data['hashtags']));
+        $message = $data['message'] . "\r\n\r\n" . $this->getUrl($data['title']) . "\r\n\r\n" . '"' . $data['description'] . '"' . (empty($data['hashtags']) ? '' : ("\r\n\r\n" . $data['hashtags']));
 
         $gpData = [
             'text' => $message,
-            'photo' => $this->getWritingPictureUrl($data['title']),
+            'photo' => $this->getPictureUrl($data['title']),
             'shorten' => 'false',
             'now' => 'true',
         ];
@@ -208,26 +215,21 @@ class SLMD
         return $gpData;
     }
 
-    private function getWritingUrl($writingTitle = '')
+    private function getUrl($title = '')
     {
-        $slug = $this->getWritingSlug($writingTitle);
+        $slug = $this->getSlug($title);
 
         return $this->settings['writings_url'] . $slug . '/';
     }
 
-    private function getWritingPictureUrl($writingTitle = '')
+    private function getPictureUrl($title = '')
     {
-        $pictureName = $this->getWritingSlug($writingTitle);
+        $pictureName = $this->getSlug($title);
 
         return $this->settings['pictures_url'] . $pictureName . '.png';
     }
 
-    private function updateWritingStatus()
-    {
-        $this->mysqli->query('UPDATE writings SET is_published = 1, is_new = 0 WHERE id = ' . $this->writingData['id']);
-    }
-
-    private function resetWritingsStatus()
+    private function resetStatus()
     {
         $this->mysqli->query('UPDATE writings SET is_published = 0');
     }
