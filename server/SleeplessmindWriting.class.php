@@ -1,6 +1,8 @@
 <?php
 
 use Abraham\TwitterOAuth\TwitterOAuth;
+use DirkGroenen\Pinterest\Exceptions\PinterestException;
+use DirkGroenen\Pinterest\Pinterest;
 use Facebook\Exceptions\FacebookResponseException;
 use Facebook\Exceptions\FacebookSDKException;
 use Facebook\Facebook;
@@ -117,12 +119,30 @@ class SleeplessmindWriting
         return $response;
     }
 
+    public function postToPinterest()
+    {
+        $pint = new Pinterest('4879426962216466139', '9c2031b2ac6319741b9a8327af0bc4e7c903db7e3faa6185b6952dea5fd66921');
+        $pint->auth->setOAuthToken('Aa_9dMT3G8TSgb8J4iJBS5NNcLKlFJqZ38UeOYxDtzXTHeAx7AAAAAA');
+
+        $data = $this->getDataForPinterest();
+
+        try {
+            $pin = $pint->pins->create($data);
+            $response = 'Pinterest: posted!';
+        } catch (PinterestException $e) {
+            $response = 'Pinterest error: ' . $e->getMessage();
+        }
+
+        return $response;
+    }
+
     public function postToAllPlatforms()
     {
         $response = $this->postToFacebook();
         $response .= "\r\n" . $this->postToTwitter();
         $response .= "\r\n" . $this->postToGooglePlus();
         $response .= "\r\n" . $this->postToInstagram();
+        $response .= "\r\n" . $this->postToPinterest();
 
         return $response;
     }
@@ -257,6 +277,22 @@ class SleeplessmindWriting
         ];
 
         return $instData;
+    }
+
+    private function getDataForPinterest()
+    {
+        $data = $this->getData();
+
+        $message = $data['message'] . (empty($data['hashtags']) ? '' : (' ' . $data['hashtags']));
+
+        $pintData = [
+            'note' => $message,
+            'image_url' => $this->getPictureUrl($data['title']),
+            'board' => 'slmd_info/writings',
+            'link' => $this->getUrl($data['title']),
+        ];
+
+        return $pintData;
     }
 
     private function getUrl($title = '')

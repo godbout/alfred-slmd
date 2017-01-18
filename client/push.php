@@ -21,6 +21,7 @@ switch ($query) {
     case 'twitter':
     case 'googleplus':
     case 'instagram':
+    case 'pinterest':
     case 'all':
 
         $data = [

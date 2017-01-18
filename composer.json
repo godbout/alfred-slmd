@@ -2,6 +2,7 @@
     "require": {
         "abraham/twitteroauth": "^0.7.2",
         "facebook/graph-sdk": "^5.4",
-        "ipalaus/buffer-php-sdk": "^1.1"
+        "ipalaus/buffer-php-sdk": "^1.1",
+        "dirkgroenen/Pinterest-API-PHP": "^0.2.11"
     }
 }

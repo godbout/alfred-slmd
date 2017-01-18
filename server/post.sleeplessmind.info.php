@@ -42,6 +42,10 @@ if ($auth->authenticate($postData['token']) === false) {
             $response['message'] = $writing->postToInstagram();
             break;
 
+        case 'pinterest':
+            $response['message'] = $writing->postToPinterest();
+            break;
+
         case 'all':
             $response['message'] = $writing->postToAllPlatforms();
 
