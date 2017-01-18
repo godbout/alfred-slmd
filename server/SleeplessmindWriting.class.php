@@ -207,7 +207,8 @@ class SleeplessmindWriting
     {
         $data = $this->getData();
 
-        $message = $data['message'] . (empty($data['hashtags']) ? '' : ("\r\n\r\n" . $data['hashtags']));
+        $message = $data['message'];
+        $message .= (empty($data['hashtags']) ? '' : ("\r\n\r\n" . $data['hashtags']));
 
         $facebookData = [
             'message' => $message,
@@ -251,7 +252,12 @@ class SleeplessmindWriting
     {
         $data = $this->getData();
 
-        $message = $data['message'] . "\r\n\r\n" . $this->getUrl($data['title']) . "\r\n\r\n" . '"' . $data['description'] . '"' . (empty($data['hashtags']) ? '' : ("\r\n\r\n" . $data['hashtags']));
+        $message = $data['message'];
+        $message .= "\r\n\r\n";
+        $message .= $this->getUrl($data['title']);
+        $message .= "\r\n\r\n";
+        $message .= '"' . $data['description'] . '"';
+        $message .= (empty($data['hashtags']) ? '' : ("\r\n\r\n" . $data['hashtags']));
 
         $gpData = [
             'text' => $message,
@@ -267,7 +273,12 @@ class SleeplessmindWriting
     {
         $data = $this->getData();
 
-        $message = $data['message'] . "\r\n.\r\n" . $this->getUrl($data['title']) . "\r\n.\r\n" . '"' . $data['description'] . '"' . (empty($data['hashtags']) ? '' : ("\r\n.\r\n" . $data['hashtags']));
+        $message = $data['message'];
+        $message .= "\r\n.\r\n";
+        $message .= $this->getUrl($data['title']);
+        $message .= "\r\n.\r\n";
+        $message .= '"' . $data['description'] . '"';
+        $message .= (empty($data['hashtags']) ? '' : ("\r\n.\r\n" . $data['hashtags']));
 
         $instData = [
             'text' => $message,
@@ -283,7 +294,8 @@ class SleeplessmindWriting
     {
         $data = $this->getData();
 
-        $message = $data['message'] . (empty($data['hashtags']) ? '' : (' ' . $data['hashtags']));
+        $message = $data['message'];
+        $message .= (empty($data['hashtags']) ? '' : (' ' . $data['hashtags']));
 
         $pintData = [
             'note' => $message,
