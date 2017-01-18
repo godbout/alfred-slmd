@@ -249,14 +249,14 @@ class SleeplessmindWriting
 
         $message = $data['message'] . "\r\n.\r\n" . $this->getUrl($data['title']) . "\r\n.\r\n" . '"' . $data['description'] . '"' . (empty($data['hashtags']) ? '' : ("\r\n.\r\n" . $data['hashtags']));
 
-        $gpData = [
+        $instData = [
             'text' => $message,
             'photo' => $this->getPictureUrl($data['title']),
             'shorten' => 'false',
             'now' => 'true',
         ];
 
-        return $gpData;
+        return $instData;
     }
 
     private function getUrl($title = '')
