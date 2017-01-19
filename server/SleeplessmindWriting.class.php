@@ -207,7 +207,9 @@ class SleeplessmindWriting
     {
         $data = $this->getData();
 
-        $message = $data['message'];
+        $message = '';
+        $message .= ($data['is_new'] == true ? '#NEW: ' : '');
+        $message .= $data['message'];
         $message .= (empty($data['hashtags']) ? '' : ("\r\n\r\n" . $data['hashtags']));
 
         $facebookData = [
@@ -252,7 +254,9 @@ class SleeplessmindWriting
     {
         $data = $this->getData();
 
-        $message = $data['message'];
+        $message = '';
+        $message .= ($data['is_new'] == true ? '#NEW: ' : '');
+        $message .= $data['message'];
         $message .= "\r\n\r\n";
         $message .= $this->getUrl($data['title']);
         $message .= "\r\n\r\n";
@@ -273,7 +277,9 @@ class SleeplessmindWriting
     {
         $data = $this->getData();
 
-        $message = $data['message'];
+        $message = '';
+        $message .= ($data['is_new'] == true ? '#NEW: ' : '');
+        $message .= $data['message'];
         $message .= "\r\n.\r\n";
         $message .= $this->getUrl($data['title']);
         $message .= "\r\n.\r\n";
@@ -294,7 +300,9 @@ class SleeplessmindWriting
     {
         $data = $this->getData();
 
-        $message = $data['message'];
+        $message = '';
+        $message .= ($data['is_new'] == true ? '#NEW: ' : '');
+        $message .= $data['message'];
         $message .= (empty($data['hashtags']) ? '' : (' ' . $data['hashtags']));
 
         $pintData = [
