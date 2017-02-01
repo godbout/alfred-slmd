@@ -121,8 +121,10 @@ class SleeplessmindWriting
 
     public function postToPinterest()
     {
-        $pint = new Pinterest('4879426962216466139', '9c2031b2ac6319741b9a8327af0bc4e7c903db7e3faa6185b6952dea5fd66921');
-        $pint->auth->setOAuthToken('Aa_9dMT3G8TSgb8J4iJBS5NNcLKlFJqZ38UeOYxDtzXTHeAx7AAAAAA');
+        $pintSettings = $this->getPinterestSettings();
+
+        $pint = new Pinterest($pintSettings['client_id'], $pintSettings['client_secret']);
+        $pint->auth->setOAuthToken($pintSettings['access_token']);
 
         $data = $this->getDataForPinterest();
 
@@ -294,6 +296,11 @@ class SleeplessmindWriting
         ];
 
         return $instData;
+    }
+
+    private function getPinterestSettings()
+    {
+        return json_decode($this->settings['pinterest'], true);
     }
 
     private function getDataForPinterest()
