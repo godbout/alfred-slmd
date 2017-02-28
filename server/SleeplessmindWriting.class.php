@@ -336,7 +336,7 @@ class SleeplessmindWriting
         return $this->settings['pictures_url'] . $pictureName . '.png';
     }
 
-    private function resetStatus()
+    private function resetWritingsStatus()
     {
         $this->mysqli->query('UPDATE writings SET is_published = 0');
     }
