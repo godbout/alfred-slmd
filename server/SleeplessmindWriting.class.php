@@ -159,20 +159,20 @@ class SleeplessmindWriting
 
     public function updateStatus()
     {
-        $this->mysqli->query('UPDATE writings SET is_published = 1, is_new = 0 WHERE id = ' . $this->data['id']);
+        $this->mysqli->query('UPDATE writings SET is_new = 0, to_publish = 2, last_published_at = NOW() WHERE id = ' . $this->data['id']);
     }
 
     private function getData()
     {
         if ($this->data === null) {
-            $result = $this->mysqli->query('SELECT * FROM writings WHERE is_new = 1 AND do_not_publish = 0 ORDER BY id ASC');
+            $result = $this->mysqli->query('SELECT * FROM writings WHERE is_new = 1 AND to_publish = 1 ORDER BY id ASC');
 
             if ($result->num_rows === 0) {
-                $result = $this->mysqli->query('SELECT * FROM writings WHERE is_published = 0 AND do_not_publish = 0');
+                $result = $this->mysqli->query('SELECT * FROM writings WHERE to_publish = 1');
 
                 if ($result->num_rows === 0) {
                     $this->resetWritingsStatus();
-                    $result = $this->mysqli->query('SELECT * FROM writings WHERE is_published = 0 AND do_not_publish = 0');
+                    $result = $this->mysqli->query('SELECT * FROM writings WHERE to_publish = 1');
                 }
 
                 $rows = $result->fetch_all(MYSQLI_ASSOC);
@@ -338,6 +338,6 @@ class SleeplessmindWriting
 
     private function resetWritingsStatus()
     {
-        $this->mysqli->query('UPDATE writings SET is_published = 0');
+        $this->mysqli->query('UPDATE writings SET to_publish = 1');
     }
 }
