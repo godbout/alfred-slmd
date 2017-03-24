@@ -31,7 +31,7 @@ switch ($query) {
 
         $dataJson = json_encode($data);
 
-        $ch = curl_init('http://post.sleeplessmind.info/post.sleeplessmind.info.php');
+        $ch = curl_init('https://post.sleeplessmind.info/post.sleeplessmind.info.php');
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
         curl_setopt($ch, CURLOPT_POSTFIELDS, $dataJson);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
