@@ -140,11 +140,12 @@ class SleeplessmindWriting
 
     public function postToAllPlatforms()
     {
-        $response = $this->postToFacebook();
-        $response .= "\r\n" . $this->postToTwitter();
-        $response .= "\r\n" . $this->postToGooglePlus();
-        $response .= "\r\n" . $this->postToInstagram();
-        $response .= "\r\n" . $this->postToPinterest();
+        $services = ['facebook', 'twitter', 'googlePlus', 'instagram', 'pinterest'];
+
+        foreach ($services as $service) {
+            $functionName = 'postTo' . ucfirst($service);
+            $response .= call_user_func(['SleeplessmindWriting', $functionName]) . "\r\n";
+        }
 
         return $response;
     }
