@@ -339,6 +339,11 @@ class SleeplessmindWriting
 
     private function resetWritingsStatus()
     {
+        $to = $this->settings['email'];
+        $subject = '[sleeplessmind.info] — All writings published';
+        $message = 'Might be time to review #hashtags, messages, tweets and images.';
+        mail($to, $subject, $message);
+
         $this->mysqli->query('UPDATE writings SET to_publish = 1');
     }
 }
