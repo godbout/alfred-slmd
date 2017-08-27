@@ -40,7 +40,6 @@ class SleeplessmindWriting
             $response = 'Facebook: posted!';
         } catch (FacebookResponseException $e) {
             $response = 'Facebook Graph error: ' . $e->getMessage();
-
         } catch (FacebookSDKException $e) {
             $response = 'Facebook SDK error: ' . $e->getMessage();
         }
@@ -218,11 +217,13 @@ class SleeplessmindWriting
         $facebookData = [
             'message' => $message,
             'link' => $this->getUrl($data['title']),
-            'picture' => $this->getPictureUrl($data['title']),
+            'source' => $this->getPictureUrl($data['title']),
             'name' => $data['title'],
             'caption' => $data['caption'],
             'description' => $data['description'],
         ];
+
+        var_dump($facebookData);
 
         return $facebookData;
     }
