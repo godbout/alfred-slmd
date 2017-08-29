@@ -223,8 +223,6 @@ class SleeplessmindWriting
             'description' => $data['description'],
         ];
 
-        var_dump($facebookData);
-
         return $facebookData;
     }
 
