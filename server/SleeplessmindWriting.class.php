@@ -151,8 +151,6 @@ class SleeplessmindWriting
 
     public static function getSlug($title = '', $separator = '-', $language = 'en')
     {
-        $title = static::ascii($title, $language);
-
         // Convert all dashes/underscores into separator
         $flip = $separator == '-' ? '_' : '-';
 
