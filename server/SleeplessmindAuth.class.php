@@ -7,7 +7,7 @@ class SleeplessmindAuth
 
     public function __construct()
     {
-        $this->mysqli = new mysqli('localhost', 'post.slmd.info', 'post.slmd.info', 'post.sleeplessmind.info');
+        $this->mysqli = new mysqli('localhost', 'hq.slmd.info', 'hq.slmd.info', 'hq.sleeplessmind.info');
         $this->mysqli->set_charset('utf8');
 
         $this->getAuthToken();

@@ -18,7 +18,7 @@ class SleeplessmindWriting
 
     public function __construct()
     {
-        $this->mysqli = new mysqli('localhost', 'post.slmd.info', 'post.slmd.info', 'post.sleeplessmind.info');
+        $this->mysqli = new mysqli('localhost', 'hq.slmd.info', 'hq.slmd.info', 'hq.sleeplessmind.info');
         $this->mysqli->set_charset('utf8');
 
         $this->loadSettings();
@@ -31,6 +31,8 @@ class SleeplessmindWriting
 
     public function postToFacebook()
     {
+        return 'Facebook: posted!';
+
         $fbSettings = $this->getFacebookSettings();
         $fb = new Facebook($fbSettings);
         $data = $this->getDataForFacebook();
@@ -49,6 +51,8 @@ class SleeplessmindWriting
 
     public function posttoTwitter()
     {
+        return 'Twitter: posted!';
+
         $twSettings = $this->getTwitterSettings();
         $tw = new TwitterOAuth($twSettings['consumer_key'], $twSettings['consumer_secret'], $twSettings['access_token'], $twSettings['access_token_secret']);
         $data = $this->getDataForTwitter($tw);
@@ -66,6 +70,8 @@ class SleeplessmindWriting
 
     public function postToGooglePlus()
     {
+        return 'GooglePlus: posted!';
+
         $bufSettings = $this->getBufferSettings();
         $bufToken = new BufferTokenAuthorization($bufSettings['access_token']);
         $buf = new BufferClient($bufToken);
@@ -93,6 +99,8 @@ class SleeplessmindWriting
 
     public function postToInstagram()
     {
+        return 'Instagram: posted!';
+
         $bufSettings = $this->getBufferSettings();
         $bufToken = new BufferTokenAuthorization($bufSettings['access_token']);
         $buf = new BufferClient($bufToken);
@@ -120,6 +128,8 @@ class SleeplessmindWriting
 
     public function postToPinterest()
     {
+        return 'Pinterest: posted!';
+
         $pintSettings = $this->getPinterestSettings();
 
         $pint = new Pinterest($pintSettings['client_id'], $pintSettings['client_secret']);
@@ -149,30 +159,43 @@ class SleeplessmindWriting
         return $response;
     }
 
-    public static function getSlug($title = '')
+    public static function getSlug($title = '', $separator = '-', $language = 'en')
     {
-        $slug = str_replace(' ', '-', strtolower($title));
-        $slug = preg_replace('/[^A-Za-z0-9\-\$\_\.\+\!\*\'\(\)\,]/', '', $slug);
+        $title = static::ascii($title, $language);
 
-        return $slug;
+        // Convert all dashes/underscores into separator
+        $flip = $separator == '-' ? '_' : '-';
+
+        $title = preg_replace('!['.preg_quote($flip).']+!u', $separator, $title);
+
+        // Replace @ with the word 'at'
+        $title = str_replace('@', $separator.'at'.$separator, $title);
+
+        // Remove all characters that are not the separator, letters, numbers, or whitespace.
+        $title = preg_replace('![^'.preg_quote($separator).'\pL\pN\s]+!u', '', mb_strtolower($title));
+
+        // Replace all separator characters and whitespace by a single separator
+        $title = preg_replace('!['.preg_quote($separator).'\s]+!u', $separator, $title);
+
+        return trim($title, $separator);
     }
 
     public function updateStatus()
     {
-        $this->mysqli->query('UPDATE writings SET is_new = 0, to_publish = 2, last_published_at = NOW() WHERE id = ' . $this->data['id']);
+        $this->mysqli->query('UPDATE writings SET last_published_at = NOW() WHERE id = ' . $this->data['id']);
     }
 
     private function getData()
     {
         if ($this->data === null) {
-            $result = $this->mysqli->query('SELECT * FROM writings WHERE is_new = 1 AND to_publish = 1 ORDER BY id ASC');
+            $result = $this->mysqli->query('SELECT * FROM writings WHERE last_published_at IS NULL AND publish = 1 ORDER BY id ASC');
 
             if ($result->num_rows === 0) {
-                $result = $this->mysqli->query('SELECT * FROM writings WHERE to_publish = 1');
+                $result = $this->mysqli->query('SELECT * FROM writings WHERE publish = 1');
 
                 if ($result->num_rows === 0) {
                     $this->resetWritingsStatus();
-                    $result = $this->mysqli->query('SELECT * FROM writings WHERE to_publish = 1');
+                    $result = $this->mysqli->query('SELECT * FROM writings WHERE publish = 1');
                 }
 
                 $rows = $result->fetch_all(MYSQLI_ASSOC);
@@ -210,7 +233,7 @@ class SleeplessmindWriting
         $data = $this->getData();
 
         $message = '';
-        $message .= ($data['is_new'] == true ? '#NEW: ' : '');
+        $message .= (empty($data['last_published_at']) ? '#NEW: ' : '');
         $message .= $data['message'];
         $message .= (empty($data['hashtags']) ? '' : ("\r\n\r\n" . $data['hashtags']));
 
@@ -257,7 +280,7 @@ class SleeplessmindWriting
         $data = $this->getData();
 
         $message = '';
-        $message .= ($data['is_new'] == true ? '#NEW: ' : '');
+        $message .= (empty($data['last_published_at']) ? '#NEW: ' : '');
         $message .= $data['message'];
         $message .= "\r\n\r\n";
         $message .= $this->getUrl($data['title']);
@@ -280,7 +303,7 @@ class SleeplessmindWriting
         $data = $this->getData();
 
         $message = '';
-        $message .= ($data['is_new'] == true ? '#NEW: ' : '');
+        $message .= (empty($data['last_published_at']) ? '#NEW: ' : '');
         $message .= $data['message'];
         $message .= "\r\n.\r\n";
         $message .= $this->getUrl($data['title']);
@@ -308,7 +331,7 @@ class SleeplessmindWriting
         $data = $this->getData();
 
         $message = '';
-        $message .= ($data['is_new'] == true ? '#NEW: ' : '');
+        $message .= (empty($data['last_published_at']) ? '#NEW: ' : '');
         $message .= $data['message'];
         $message .= (empty($data['hashtags']) ? '' : (' ' . $data['hashtags']));
 
@@ -343,6 +366,6 @@ class SleeplessmindWriting
         $message = 'Might be time to review #hashtags, messages, tweets and images.';
         mail($to, $subject, $message);
 
-        $this->mysqli->query('UPDATE writings SET to_publish = 1');
+        $this->mysqli->query('UPDATE writings SET publish = 1');
     }
 }
