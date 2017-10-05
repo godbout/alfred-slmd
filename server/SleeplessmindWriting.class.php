@@ -83,9 +83,9 @@ class SleeplessmindWriting
         $bufResponse = $buf->createUpdate($bufUpdate);
 
         if ($bufResponse['success'] === true) {
-            $response = 'Google+: posted!';
+            $response = 'GooglePlus: posted!';
         } else {
-            $response = 'Google+ (Buffer) error: ' . $bufResponse['message'];
+            $response = 'GooglePlus (Buffer) error: ' . $bufResponse['message'];
         }
 
         return $response;
