@@ -31,8 +31,6 @@ class SleeplessmindWriting
 
     public function postToFacebook()
     {
-        return 'Facebook: posted!';
-
         $fbSettings = $this->getFacebookSettings();
         $fb = new Facebook($fbSettings);
         $data = $this->getDataForFacebook();
@@ -51,8 +49,6 @@ class SleeplessmindWriting
 
     public function posttoTwitter()
     {
-        return 'Twitter: posted!';
-
         $twSettings = $this->getTwitterSettings();
         $tw = new TwitterOAuth($twSettings['consumer_key'], $twSettings['consumer_secret'], $twSettings['access_token'], $twSettings['access_token_secret']);
         $data = $this->getDataForTwitter($tw);
@@ -70,8 +66,6 @@ class SleeplessmindWriting
 
     public function postToGooglePlus()
     {
-        return 'GooglePlus: posted!';
-
         $bufSettings = $this->getBufferSettings();
         $bufToken = new BufferTokenAuthorization($bufSettings['access_token']);
         $buf = new BufferClient($bufToken);
@@ -99,8 +93,6 @@ class SleeplessmindWriting
 
     public function postToInstagram()
     {
-        return 'Instagram: posted!';
-
         $bufSettings = $this->getBufferSettings();
         $bufToken = new BufferTokenAuthorization($bufSettings['access_token']);
         $buf = new BufferClient($bufToken);
@@ -128,8 +120,6 @@ class SleeplessmindWriting
 
     public function postToPinterest()
     {
-        return 'Pinterest: posted!';
-
         $pintSettings = $this->getPinterestSettings();
 
         $pint = new Pinterest($pintSettings['client_id'], $pintSettings['client_secret']);
