@@ -32,7 +32,10 @@ switch ($argv[1]) {
             }
 
             echo $notification;
+            return;
         }
+
+        echo 'Succeeded with: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase();
         break;
 
     default:
