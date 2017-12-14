@@ -17,11 +17,15 @@ $dotenv->load();
 switch ($argv[1]) {
     case 'all':
     case 'facebook':
+    case 'twitter':
+    case 'instagram':
+    case 'googleplus':
+    case 'pinterest':
         share($argv[1]);
         break;
 
     default:
-        echo 'Single media sharing not supported... yet.';
+        echo $argv[1] . ' media sharing not supported... yet.';
         break;
 }
 
@@ -34,7 +38,10 @@ function share($service)
                 'Authorization' => 'Bearer ' . getenv('API_TOKEN'),
             ]
         ]);
-        $response = $client->post(getenv('API_BASEURL') . $service);
+        $response = $client->post(
+            getenv('API_URL'),
+            ['form_params' => ['service' => $service, ]]
+        );
     } catch (RequestException | ConnectException | ClientException $e) {
         $notification = 'Failed with: ';
         if ($e->hasResponse()) {
@@ -46,5 +53,5 @@ function share($service)
         return;
     }
 
-    echo $response->getBody();
+    echo json_decode($response->getBody(), true)['message'];
 }
